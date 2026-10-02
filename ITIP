@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Introduction to IP — 3D Network Animation</title>
+<style>
+:root{
+  --bg:#07111f;
+  --panel:#0c1a2c;
+  --panel2:#10233a;
+  --line:#294661;
+  --text:#eef7ff;
+  --muted:#9db3c8;
+  --accent:#55c7ff;
+  --accent2:#8d7cff;
+  --good:#5ee6a8;
+  --warn:#ffc857;
+  --danger:#ff7088;
+  --shadow:0 18px 50px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{
+  width:100%;
+  height:100%;
+  margin:0;
+  overflow:hidden;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+}
+body{
+  display:flex;
+  align-items:stretch;
+  justify-content:center;
+}
+.app{
+  width:100%;
+  height:100%;
+  max-width:1600px;
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(85,199,255,.10), transparent 28%),
+    radial-gradient(circle at 80% 80%, rgba(141,124,255,.10), transparent 30%),
+    linear-gradient(135deg,#07111f,#081727 55%,#06101d);
+}
+.header{
+  min-height:72px;
+  padding:14px clamp(14px,3vw,38px);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:rgba(5,14,25,.72);
+  backdrop-filter:blur(14px);
+  z-index:100;
+}
+.brand{min-width:0}
+.eyebrow{
+  color:var(--accent);
+  font-size:clamp(10px,1.2vw,13px);
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  font-weight:800;
+}
+.title{
+  margin:3px 0 0;
+  font-size:clamp(17px,2.1vw,27px);
+  line-height:1.1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.scene-count{
+  flex:0 0 auto;
+  color:var(--muted);
+  font-size:13px;
+  padding:8px 12px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:rgba(16,35,58,.65);
+}
+.stage{
+  min-height:0;
+  padding:clamp(10px,2vw,22px);
+  display:grid;
+  grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);
+  gap:clamp(10px,1.5vw,20px);
+  overflow:hidden;
+}
+.visual-shell,.info-shell{
+  min-width:0;
+  min-height:0;
+  position:relative;
+  border:1px solid rgba(125,170,205,.20);
+  border-radius:20px;
+  background:linear-gradient(145deg,rgba(13,31,50,.96),rgba(7,20,34,.96));
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.visual-shell{
+  perspective:1200px;
+}
+.visual-grid{
+  position:absolute;
+  inset:0;
+  opacity:.24;
+  background-image:
+    linear-gradient(rgba(85,199,255,.10) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(85,199,255,.10) 1px,transparent 1px);
+  background-size:42px 42px;
+  transform:perspective(600px) rotateX(62deg) translateY(30%);
+  transform-origin:center bottom;
+  pointer-events:none;
+}
+.visual{
+  position:absolute;
+  inset:0;
+  padding:clamp(12px,2vw,28px);
+  overflow:hidden;
+  z-index:10;
+}
+.scene{
+  position:absolute;
+  inset:0;
+  padding:clamp(12px,2vw,28px);
+  overflow:hidden;
+  opacity:0;
+  visibility:hidden;
+  transform:translateZ(-40px) scale(.985);
+  transition:opacity .45s ease,transform .45s ease,visibility .45s;
+}
+.scene.active{
+  opacity:1;
+  visibility:visible;
+  transform:translateZ(0) scale(1);
+}
+.scene-heading{
+  position:relative;
+  z-index:40;
+  max-width:75%;
+}
+.scene-heading h2{
+  margin:0;
+  font-size:clamp(20px,3vw,38px);
+  line-height:1.05;
+}
+.scene-heading p{
+  margin:8px 0 0;
+  color:var(--muted);
+  max-width:700px;
+  font-size:clamp(11px,1.35vw,15px);
+  line-height:1.45;
+}
+.info-shell{
+  padding:clamp(16px,2vw,24px);
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr);
+}
+.info-title{
+  font-size:12px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--accent);
+  font-weight:800;
+}
+.info-list{
+  margin-top:12px;
+  overflow:auto;
+  padding-right:4px;
+}
+.info-list::-webkit-scrollbar{width:5px}
+.info-list::-webkit-scrollbar-thumb{background:#28445e;border-radius:10px}
+.fact{
+  padding:12px 0;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.fact strong{
+  display:block;
+  font-size:14px;
+  margin-bottom:4px;
+}
+.fact span{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.45;
+}
+.nav{
+  min-height:70px;
+  padding:10px clamp(12px,3vw,38px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  border-top:1px solid rgba(255,255,255,.08);
+  background:rgba(5,14,25,.88);
+  backdrop-filter:blur(14px);
+  z-index:100;
+}
+button{
+  appearance:none;
+  border:1px solid #355673;
+  color:var(--text);
+  background:linear-gradient(180deg,#15304b,#0d2136);
+  min-height:44px;
+  padding:0 18px;
+  border-radius:12px;
+  font:700 13px/1 inherit;
+  cursor:pointer;
+  transition:transform .15s ease,border-color .15s ease,background .15s ease,opacity .15s ease;
+  box-shadow:0 7px 20px rgba(0,0,0,.2);
+}
+button:hover{transform:translateY(-1px);border-color:var(--accent)}
+button:active{transform:translateY(1px)}
+button:focus-visible{outline:3px solid rgba(85,199,255,.45);outline-offset:2px}
+button.primary{
+  min-width:138px;
+  background:linear-gradient(180deg,#175072,#12364f);
+  border-color:#4aaed5;
+}
+button:disabled{opacity:.38;cursor:not-allowed;transform:none}
+.progress{
+  position:absolute;
+  left:0;
+  top:0;
+  height:3px;
+  width:0%;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  z-index:200;
+  transition:width .2s linear;
+}
+
+/* Shared 3D objects */
+.device{
+  position:absolute;
+  width:clamp(110px,14vw,190px);
+  height:clamp(74px,9vw,120px);
+  border:1px solid #47708e;
+  border-radius:15px;
+  background:linear-gradient(145deg,#17334f,#0a1b2c);
+  box-shadow:0 20px 40px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.08);
+  transform-style:preserve-3d;
+  z-index:20;
+}
+.device:before{
+  content:"";
+  position:absolute;
+  inset:8px;
+  border:1px solid rgba(85,199,255,.2);
+  border-radius:9px;
+}
+.device .device-label{
+  position:absolute;
+  inset:auto 8px 9px;
+  text-align:center;
+  font-size:clamp(10px,1.1vw,13px);
+  font-weight:800;
+  color:#dff5ff;
+  z-index:2;
+}
+.device .screen{
+  position:absolute;
+  left:15%;
+  right:15%;
+  top:13%;
+  height:44%;
+  border-radius:6px;
+  background:radial-gradient(circle at 30% 30%,rgba(85,199,255,.45),rgba(6,21,36,.9));
+  border:1px solid rgba(85,199,255,.35);
+}
+.node{
+  position:absolute;
+  width:clamp(22px,3vw,42px);
+  height:clamp(22px,3vw,42px);
+  border-radius:50%;
+  border:2px solid rgba(85,199,255,.8);
+  background:#0a2438;
+  box-shadow:0 0 0 8px rgba(85,199,255,.05),0 0 28px rgba(85,199,255,.22);
+  z-index:18;
+}
+.link{
+  position:absolute;
+  height:3px;
+  transform-origin:left center;
+  background:linear-gradient(90deg,rgba(85,199,255,.2),rgba(85,199,255,.85),rgba(141,124,255,.2));
+  box-shadow:0 0 14px rgba(85,199,255,.2);
+  z-index:8;
+}
+.packet{
+  position:absolute;
+  width:clamp(18px,2.2vw,30px);
+  height:clamp(12px,1.5vw,20px);
+  border-radius:4px;
+  background:linear-gradient(135deg,#55c7ff,#8d7cff);
+  box-shadow:0 0 22px rgba(85,199,255,.6);
+  z-index:25;
+  transform-style:preserve-3d;
+}
+.packet:after{
+  content:"IP";
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  font-size:8px;
+  font-weight:900;
+  color:#fff;
+}
+
+/* Page 1 */
+.s1-road{
+  position:absolute;
+  left:7%;
+  right:7%;
+  top:48%;
+  height:25%;
+  border-radius:50% / 18%;
+  border:2px solid rgba(105,146,174,.38);
+  background:
+    repeating-linear-gradient(90deg,transparent 0 6%,rgba(255,255,255,.28) 6% 9%,transparent 9% 15%),
+    linear-gradient(180deg,#14283b,#0b1726);
+  box-shadow:0 30px 45px rgba(0,0,0,.35);
+  transform:perspective(700px) rotateX(45deg);
+  transform-origin:center top;
+}
+.s1-road:after{
+  content:"NETWORK";
+  position:absolute;
+  left:50%;
+  top:45%;
+  transform:translate(-50%,-50%);
+  letter-spacing:.3em;
+  color:rgba(180,211,232,.25);
+  font-size:clamp(10px,1.2vw,14px);
+  font-weight:900;
+}
+.s1-truck{
+  position:absolute;
+  left:42%;
+  top:53%;
+  width:clamp(80px,11vw,140px);
+  height:clamp(46px,6vw,75px);
+  border-radius:10px;
+  background:linear-gradient(145deg,#256b91,#10334c);
+  border:1px solid #62c6ee;
+  transform:translateZ(55px) rotateY(-8deg);
+  box-shadow:0 18px 30px rgba(0,0,0,.45);
+  z-index:25;
+}
+.s1-truck:before{
+  content:"IP";
+  position:absolute;
+  left:14%;
+  top:17%;
+  width:47%;
+  height:52%;
+  display:grid;
+  place-items:center;
+  border-radius:5px;
+  background:#0a1c2d;
+  color:#7bddff;
+  font-weight:900;
+  box-shadow:inset 0 0 15px rgba(85,199,255,.15);
+}
+.s1-truck:after{
+  content:"●  ●";
+  position:absolute;
+  right:5%;
+  bottom:-9px;
+  color:#07111f;
+  font-size:18px;
+  letter-spacing:5px;
+}
+
+/* Page 2 encapsulation */
+.stack{
+  position:absolute;
+  left:12%;
+  right:12%;
+  top:34%;
+  bottom:10%;
+  display:grid;
+  place-items:center;
+  transform-style:preserve-3d;
+}
+.layer{
+  position:absolute;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-weight:900;
+  letter-spacing:.03em;
+  border-radius:14px;
+  transform-style:preserve-3d;
+  box-shadow:0 22px 40px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.08);
+}
+.eth{width:92%;height:78%;background:linear-gradient(145deg,#173d55,#0c2438);border:1px solid #4e8daf;transform:translateZ(0) rotateX(8deg)}
+.ip{width:78%;height:65%;background:linear-gradient(145deg,#243d6b,#151f45);border:1px solid #777fe0;transform:translateZ(35px) rotateX(8deg)}
+.tcp{width:62%;height:51%;background:linear-gradient(145deg,#3d356d,#261e4a);border:1px solid #9a7df0;transform:translateZ(70px) rotateX(8deg)}
+.http{width:46%;height:37%;background:linear-gradient(145deg,#28634f,#173b31);border:1px solid #61d3a6;transform:translateZ(105px) rotateX(8deg)}
+.layer small{display:block;font-size:clamp(8px,1vw,11px);opacity:.72;margin-top:4px}
+.layer span{display:block;font-size:clamp(12px,1.6vw,19px)}
+.stack-caption{
+  position:absolute;right:5%;top:13%;z-index:40;
+  color:var(--muted);font-size:11px;max-width:180px;line-height:1.45;
+}
+
+/* Page 3 TCP vs UDP */
+.compare{
+  position:absolute;
+  inset:28% 7% 8%;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:clamp(12px,2vw,28px);
+}
+.proto-card{
+  position:relative;
+  min-width:0;
+  border:1px solid #365a74;
+  border-radius:18px;
+  padding:clamp(14px,2vw,24px);
+  background:linear-gradient(145deg,#112a42,#0a192b);
+  transform-style:preserve-3d;
+  box-shadow:0 25px 45px rgba(0,0,0,.32);
+  overflow:hidden;
+}
+.proto-card h3{margin:0;font-size:clamp(18px,2.2vw,28px)}
+.proto-card p{color:var(--muted);font-size:clamp(10px,1.1vw,13px);line-height:1.4}
+.badge{
+  display:inline-block;margin-top:6px;padding:5px 8px;border-radius:999px;
+  font-size:10px;font-weight:900;border:1px solid currentColor;
+}
+.tcp-card .badge{color:var(--good)}
+.udp-card .badge{color:var(--warn)}
+.phone{
+  position:absolute;right:12%;bottom:13%;width:72px;height:120px;
+  border:2px solid #66859c;border-radius:15px;background:#081522;z-index:12;
+}
+.phone:before{content:"";position:absolute;inset:9px;border-radius:8px;background:linear-gradient(160deg,#173c58,#0b1c2d)}
+.signal{position:absolute;left:18%;right:18%;top:46%;height:3px;background:#55c7ff;box-shadow:0 0 12px #55c7ff}
+
+/* Page 4 multiplexing */
+.mux-left,.mux-right{
+  position:absolute;top:36%;width:18%;height:38%;
+  border:1px solid #4c6b82;border-radius:16px;background:#10263b;
+  display:grid;place-items:center;text-align:center;font-weight:900;
+  box-shadow:0 20px 35px rgba(0,0,0,.3);
+}
+.mux-left{left:5%}.mux-right{right:5%}
+.mux-pipe{position:absolute;left:22%;right:22%;top:44%;height:28%;border:1px solid #3d5c75;border-radius:20px;background:rgba(8,22,36,.7);overflow:hidden}
+.stream{position:absolute;left:-12%;width:11%;height:20%;border-radius:4px}
+.stream.a{top:15%;background:#55c7ff}.stream.b{top:40%;background:#8d7cff}.stream.c{top:65%;background:#5ee6a8}
+.stream:after{content:"";position:absolute;inset:0;border:1px solid rgba(255,255,255,.35);border-radius:4px}
+
+/* Page 5 ports */
+.server{
+  position:absolute;left:8%;top:35%;width:27%;height:42%;
+  border:1px solid #52718b;border-radius:17px;background:linear-gradient(145deg,#17334b,#0a1a2a);
+  box-shadow:0 25px 45px rgba(0,0,0,.35);z-index:20;
+}
+.server h3{margin:14px;font-size:14px}
+.server-room{
+  margin:8px 12px;padding:9px;border-radius:9px;border:1px solid #355773;background:#0b2032;
+  font-size:10px;color:#cbe7f5;
+}
+.server-room b{color:#55c7ff}
+.port-list{
+  position:absolute;right:7%;top:27%;width:48%;height:55%;
+  display:grid;grid-template-columns:repeat(2,1fr);gap:10px;
+}
+.port{
+  border:1px solid #385d78;border-radius:13px;background:#0e253a;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;box-shadow:0 16px 30px rgba(0,0,0,.28);
+}
+.port strong{font-size:clamp(14px,1.7vw,22px)}
+.port span{font-size:10px;color:var(--muted);margin-top:4px}
+.port.tcp{transform:none;position:relative;width:auto;height:auto;background:#0e253a}
+.port.udp{border-color:#7d6a38}
+.port:nth-child(3){grid-column:1 / span 2}
+
+/* Page 6 flow */
+.flow{
+  position:absolute;inset:33% 6% 12%;
+}
+.flow-node{
+  position:absolute;top:20%;width:18%;height:45%;
+  border:1px solid #46657c;border-radius:16px;background:#10263b;
+  display:grid;place-items:center;text-align:center;font-weight:900;
+  box-shadow:0 20px 35px rgba(0,0,0,.3);
+}
+.client{left:2%}.server-node{right:2%}
+.flow-line{
+  position:absolute;left:20%;right:20%;top:42%;height:3px;background:#345b76;
+}
+.flow-arrow{
+  position:absolute;top:32%;width:20px;height:20px;border-top:3px solid #55c7ff;border-right:3px solid #55c7ff;transform:rotate(45deg);
+}
+.a1{left:35%}.a2{left:55%}
+.flow-tag{
+  position:absolute;top:68%;left:28%;right:28%;text-align:center;color:var(--muted);font-size:11px;
+}
+
+/* Page 7 summary */
+.summary-grid{
+  position:absolute;inset:32% 6% 10%;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+}
+.summary-card{
+  border:1px solid #3b5c74;border-radius:17px;padding:16px;
+  background:linear-gradient(145deg,#112a42,#0a1a2a);
+  box-shadow:0 18px 35px rgba(0,0,0,.3);
+  transform:translateZ(25px);
+}
+.summary-card .num{
+  font-size:clamp(25px,4vw,48px);font-weight:900;color:#55c7ff;
+}
+.summary-card h3{margin:6px 0;font-size:clamp(13px,1.5vw,18px)}
+.summary-card p{margin:0;color:var(--muted);font-size:11px;line-height:1.45}
+
+/* Animation classes */
+@keyframes truckMove{
+  0%{transform:translate3d(-12vw,0,55px) rotateY(-8deg)}
+  100%{transform:translate3d(12vw,0,55px) rotateY(-8deg)}
+}
+@keyframes packetPulse{
+  0%,100%{opacity:.4;transform:scale(.85)}
+  50%{opacity:1;transform:scale(1)}
+}
+@keyframes layerFloat{
+  0%,100%{filter:brightness(.92)}
+  50%{filter:brightness(1.2)}
+}
+@keyframes tcpFlow{
+  0%{transform:translateX(-30px);opacity:0}
+  18%{opacity:1}
+  50%{transform:translateX(190px);opacity:1}
+  82%{opacity:1}
+  100%{transform:translateX(350px);opacity:0}
+}
+@keyframes udpFlow{
+  0%{transform:translateX(-30px);opacity:0}
+  15%{opacity:1}
+  85%{opacity:1}
+  100%{transform:translateX(350px);opacity:0}
+}
+@keyframes streamFlow{
+  0%{left:-12%;opacity:0}
+  15%{opacity:1}
+  85%{opacity:1}
+  100%{left:101%;opacity:0}
+}
+@keyframes arrowMove{
+  0%,100%{opacity:.25;transform:rotate(45deg) translate(-4px,-4px)}
+  50%{opacity:1;transform:rotate(45deg) translate(5px,5px)}
+}
+@keyframes summaryFloat{
+  0%,100%{transform:translateZ(25px) translateY(0)}
+  50%{transform:translateZ(25px) translateY(-5px)}
+}
+.playing .s1-truck{animation:truckMove 4.8s ease-in-out infinite alternate}
+.playing .layer{animation:layerFloat 2.5s ease-in-out infinite}
+.playing .tcp-card{animation:summaryFloat 2.6s ease-in-out infinite}
+.playing .udp-card{animation:summaryFloat 2.6s ease-in-out 1.1s infinite}
+.playing .stream{animation:streamFlow 2.8s linear infinite}
+.playing .stream.b{animation-delay:.65s}
+.playing .stream.c{animation-delay:1.3s}
+.playing .flow-arrow{animation:arrowMove 1.1s ease-in-out infinite}
+.playing .flow-arrow.a2{animation-delay:.45s}
+.playing .summary-card{animation:summaryFloat 2.5s ease-in-out infinite}
+.playing .summary-card:nth-child(2){animation-delay:.3s}
+.playing .summary-card:nth-child(3){animation-delay:.6s}
+
+@media(max-width:900px){
+  .stage{grid-template-columns:1fr}
+  .info-shell{display:none}
+  .visual-shell{min-height:0}
+}
+@media(max-width:560px){
+  .header{min-height:62px;padding:10px 12px}
+  .title{font-size:16px}
+  .scene-count{font-size:10px;padding:6px 8px}
+  .stage{padding:8px}
+  .nav{min-height:66px;padding:8px;gap:7px}
+  button{padding:0 11px;min-height:42px;font-size:11px}
+  button.primary{min-width:118px}
+  .compare{gap:8px}
+  .summary-grid{grid-template-columns:1fr;inset:31% 10% 7%}
+  .summary-card{padding:10px}
+  .summary-card .num{font-size:26px}
+  .summary-card p{font-size:9px}
+  .port-list{gap:6px}
+  .port{padding:4px}
+  .server{width:31%}
+  .flow-node{width:24%}
+  .flow-line{left:27%;right:27%}
+}
+@media(max-width:380px){
+  .nav button{padding:0 8px}
+  .nav .primary{min-width:105px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="progress" id="progress"></div>
+
+  <header class="header">
+    <div class="brand">
+      <div class="eyebrow">Interactive Networking Primer</div>
+      <div class="title">Introduction to IP</div>
+    </div>
+    <div class="scene-count" id="sceneCount">Page 1 / 7</div>
+  </header>
+
+  <main class="stage">
+    <section class="visual-shell" aria-label="3D animation area">
+      <div class="visual-grid"></div>
+      <div class="visual" id="visual">
+
+        <!-- Page 1 -->
+        <section class="scene active" data-page="0">
+          <div class="scene-heading">
+            <h2>IP carries information across the network</h2>
+            <p>The source describes the network as roads or highways, with IP acting like a truck carrying information from one device to another.</p>
+          </div>
+          <div class="device" style="left:7%;bottom:12%;">
+            <div class="screen"></div><div class="device-label">Client / Laptop</div>
+          </div>
+          <div class="device" style="right:7%;bottom:12%;">
+            <div class="screen"></div><div class="device-label">Web Server</div>
+          </div>
+          <div class="s1-road"></div>
+          <div class="s1-truck" aria-hidden="true"></div>
+        </section>
+
+        <!-- Page 2 -->
+        <section class="scene" data-page="1">
+          <div class="scene-heading">
+            <h2>Encapsulation: information inside information</h2>
+            <p>Ethernet carries an IP packet; IP carries TCP or UDP information; TCP can carry HTTP data for web communication.</p>
+          </div>
+          <div class="stack">
+            <div class="layer eth"><div><span>Ethernet Frame</span><small>Header + payload + trailer</small></div></div>
+            <div class="layer ip"><div><span>IP</span><small>IP header + IP payload</small></div></div>
+            <div class="layer tcp"><div><span>TCP</span><small>TCP header + TCP payload</small></div></div>
+            <div class="layer http"><div><span>HTTP</span><small>Web communication data</small></div></div>
+          </div>
+          <div class="stack-caption"><b>Encapsulation</b><br>Data is nested inside successive protocol layers before transmission.</div>
+        </section>
+
+        <!-- Page 3 -->
+        <section class="scene" data-page="2">
+          <div class="scene-heading">
+            <h2>TCP and UDP: two transport approaches</h2>
+            <p>Both can transport information across multiple devices, but their communication characteristics differ.</p>
+          </div>
+          <div class="compare">
+            <article class="proto-card tcp-card">
+              <h3>TCP</h3>
+              <div class="badge">CONNECTION-ORIENTED</div>
+              <p>Formal connection setup and teardown, acknowledgments, retransmission when needed, and flow control support reliable delivery.</p>
+              <div class="phone"><div class="signal"></div></div>
+            </article>
+            <article class="proto-card udp-card">
+              <h3>UDP</h3>
+              <div class="badge">CONNECTIONLESS</div>
+              <p>No formal setup or teardown, no acknowledgments, no retransmission mechanism, and no TCP-style flow control. It has low overhead.</p>
+              <div class="packet" style="right:20%;bottom:18%;animation:packetPulse 1.7s ease-in-out infinite"></div>
+            </article>
+          </div>
+        </section>
+
+        <!-- Page 4 -->
+        <section class="scene" data-page="3">
+          <div class="scene-heading">
+            <h2>Multiplexing: different traffic at the same time</h2>
+            <p>TCP and UDP allow different types of traffic to communicate simultaneously and be properly received on the other side.</p>
+          </div>
+          <div class="mux-left">CLIENT</div>
+          <div class="mux-right">SERVER</div>
+          <div class="mux-pipe">
+            <div class="stream a"></div>
+            <div class="stream b"></div>
+            <div class="stream c"></div>
+          </div>
+          <div style="position:absolute;left:28%;right:28%;bottom:10%;text-align:center;color:var(--muted);font-size:11px">
+            Web • Voice • Email — separate communication flows can share the network.
+          </div>
+        </section>
+
+        <!-- Page 5 -->
+        <section class="scene" data-page="4">
+          <div class="scene-heading">
+            <h2>IP address + protocol + port</h2>
+            <p>The source compares a server to a house: the IP address identifies the destination, while a port number identifies the service or application receiving the data.</p>
+          </div>
+          <div class="server">
+            <h3>Server — 10.0.0.2</h3>
+            <div class="server-room"><b>Room:</b> Web service</div>
+            <div class="server-room"><b>Room:</b> VoIP service</div>
+            <div class="server-room"><b>Room:</b> Email service</div>
+          </div>
+          <div class="port-list">
+            <div class="port"><strong>TCP 80</strong><span>Web / HTTP</span></div>
+            <div class="port udp"><strong>UDP 5004</strong><span>Voice over IP</span></div>
+            <div class="port"><strong>TCP 143</strong><span>Email</span></div>
+          </div>
+        </section>
+
+        <!-- Page 6 -->
+        <section class="scene" data-page="5">
+          <div class="scene-heading">
+            <h2>Client and server traffic flows</h2>
+            <p>Each communication can be identified by source IP, destination IP, protocol, source port, and destination port.</p>
+          </div>
+          <div class="flow">
+            <div class="flow-node client">10.0.0.1<br><small>Client</small></div>
+            <div class="flow-node server-node">10.0.0.2<br><small>Server</small></div>
+            <div class="flow-line"></div>
+            <div class="flow-arrow a1"></div>
+            <div class="flow-arrow a2"></div>
+            <div class="packet" style="left:31%;top:34%;animation:tcpFlow 3s linear infinite"></div>
+            <div class="packet" style="left:31%;top:52%;animation:udpFlow 2.4s linear .7s infinite"></div>
+            <div class="flow-tag">Server-side well-known/destination ports • Client-side ephemeral/source ports</div>
+          </div>
+        </section>
+
+        <!-- Page 7 -->
+        <section class="scene" data-page="6">
+          <div class="scene-heading">
+            <h2>The complete picture</h2>
+            <p>IP provides the network delivery layer while TCP/UDP transport information and port numbers identify how traffic is handled between devices.</p>
+          </div>
+          <div class="summary-grid">
+            <article class="summary-card">
+              <div class="num">IP</div>
+              <h3>Destination</h3>
+              <p>Moves packets between devices using IP addresses.</p>
+            </article>
+            <article class="summary-card">
+              <div class="num">TCP</div>
+              <h3>Reliable transport</h3>
+              <p>Connection setup, acknowledgments, retransmission and flow control.</p>
+            </article>
+            <article class="summary-card">
+              <div class="num">UDP</div>
+              <h3>Low overhead</h3>
+              <p>Connectionless delivery without TCP acknowledgments or retransmission.</p>
+            </article>
+          </div>
+        </section>
+
+      </div>
+    </section>
+
+    <aside class="info-shell" aria-label="Key information">
+      <div class="info-title">Page facts</div>
+      <div class="info-list" id="infoList"></div>
+    </aside>
+  </main>
+
+  <nav class="nav" aria-label="Animation controls">
+    <button id="prevBtn" type="button" aria-label="Previous page">◀ Previous</button>
+    <button id="playBtn" class="primary" type="button" aria-label="Pause autoplay">⏸ Autoplay</button>
+    <button id="nextBtn" type="button" aria-label="Next page">Next ▶</button>
+  </nav>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const scenes = [
+    {
+      title:"IP carries information across the network",
+      facts:[
+        ["Network medium","The source notes that IP does not depend on whether the transport is Ethernet, wireless, DSL, or another network type."],
+        ["IP analogy","IP is presented as a truck carrying information across a road or highway."],
+        ["Endpoints","The example uses a client/laptop communicating with a web server."]
+      ]
+    },
+    {
+      title:"Encapsulation",
+      facts:[
+        ["Ethernet","The frame contains a header, payload, and trailer."],
+        ["IP","The Ethernet payload can contain IP traffic with an IP header and IP payload."],
+        ["TCP / HTTP","The IP payload can contain TCP information, and TCP can carry HTTP data for web communication."]
+      ]
+    },
+    {
+      title:"TCP vs UDP",
+      facts:[
+        ["TCP","Connection-oriented, with formal setup and teardown and acknowledgments."],
+        ["Reliable delivery","TCP can detect problems through acknowledgments and retransmit data when needed."],
+        ["UDP","Connectionless and low overhead, with no acknowledgments, retransmission, or TCP-style flow control."]
+      ]
+    },
+    {
+      title:"Multiplexing",
+      facts:[
+        ["Purpose","Different traffic types can be sent simultaneously across the network."],
+        ["Transport","TCP and UDP support communication flows that can be distinguished and received correctly."],
+        ["Examples","The source discusses web, voice, and email traffic as separate communication flows."]
+      ]
+    },
+    {
+      title:"Ports",
+      facts:[
+        ["IP address","Identifies the device/destination in the example."],
+        ["Port number","Directs incoming data toward the appropriate service or application."],
+        ["Ranges","TCP and UDP each use port values from 0 through 65,535; client ephemeral ports are commonly 1,024 through 65,535."],
+        ["Important","TCP port 80 and UDP port 80 are distinct because port numbers are specific to their protocol."]
+      ]
+    },
+    {
+      title:"Traffic flow",
+      facts:[
+        ["Example addresses","Client: 10.0.0.1. Server: 10.0.0.2."],
+        ["Server ports","The example uses TCP 80, UDP 5004, and TCP 143 for different services."],
+        ["Ephemeral source ports","The client uses temporary/random source ports for communication flows."]
+      ]
+    },
+    {
+      title:"Complete picture",
+      facts:[
+        ["IP","Provides the addressing and packet delivery across the network."],
+        ["TCP","Provides connection-oriented, acknowledgment-based transport with retransmission and flow control."],
+        ["UDP","Provides connectionless, low-overhead transport; an application can implement its own recovery behavior when appropriate."]
+      ]
+    }
+  ];
+
+  const app = document.getElementById("app");
+  const sceneEls = [...document.querySelectorAll(".scene")];
+  const infoList = document.getElementById("infoList");
+  const sceneCount = document.getElementById("sceneCount");
+  const progress = document.getElementById("progress");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const playBtn = document.getElementById("playBtn");
+
+  let currentPage = 0;
+  let isPlaying = true;
+  let timerId = null;
+  const sceneDuration = 6500;
+
+  function renderFacts() {
+    const data = scenes[currentPage];
+    infoList.innerHTML = data.facts.map(([head,body]) =>
+      `<div class="fact"><strong>${escapeHtml(head)}</strong><span>${escapeHtml(body)}</span></div>`
+    ).join("");
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
+  }
+
+  function updateProgress() {
+    progress.style.width = ((currentPage + 1) / scenes.length * 100) + "%";
+    sceneCount.textContent = `Page ${currentPage + 1} / ${scenes.length}`;
+    prevBtn.disabled = currentPage === 0;
+    nextBtn.disabled = currentPage === scenes.length - 1;
+  }
+
+  function updatePlayButton() {
+    playBtn.textContent = isPlaying ? "⏸ Autoplay" : "▶ Autoplay";
+    playBtn.setAttribute("aria-label", isPlaying ? "Pause autoplay" : "Start autoplay");
+    app.classList.toggle("playing", isPlaying);
+  }
+
+  function clearTimer() {
+    if (timerId !== null) {
+      clearTimeout(timerId);
+      timerId = null;
+    }
+  }
+
+  function scheduleNext() {
+    clearTimer();
+    if (!isPlaying) return;
+    timerId = setTimeout(() => {
+      if (currentPage >= scenes.length - 1) {
+        isPlaying = false;
+        updatePlayButton();
+        return;
+      }
+      goToScene(currentPage + 1, true);
+    }, sceneDuration);
+  }
+
+  function goToScene(index, preservePlayState = false) {
+    clearTimer();
+
+    const bounded = Math.max(0, Math.min(scenes.length - 1, index));
+    sceneEls.forEach((el, i) => {
+      el.classList.toggle("active", i === bounded);
+    });
+    currentPage = bounded;
+    renderFacts();
+    updateProgress();
+
+    if (!preservePlayState) {
+      isPlaying = false;
+      updatePlayButton();
+    } else {
+      updatePlayButton();
+    }
+
+    if (isPlaying) scheduleNext();
+  }
+
+  function togglePlay() {
+    isPlaying = !isPlaying;
+    updatePlayButton();
+    if (isPlaying) {
+      if (currentPage >= scenes.length - 1) {
+        currentPage = 0;
+        sceneEls.forEach((el, i) => el.classList.toggle("active", i === 0));
+        renderFacts();
+        updateProgress();
+      }
+      scheduleNext();
+    } else {
+      clearTimer();
+    }
+  }
+
+  prevBtn.addEventListener("click", () => {
+    goToScene(currentPage - 1, false);
+  });
+
+  nextBtn.addEventListener("click", () => {
+    goToScene(currentPage + 1, false);
+  });
+
+  playBtn.addEventListener("click", togglePlay);
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      goToScene(currentPage - 1, false);
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      goToScene(currentPage + 1, false);
+    } else if (e.code === "Space") {
+      e.preventDefault();
+      togglePlay();
+    }
+  });
+
+  // Initialize exactly one scene state and one autoplay timer.
+  renderFacts();
+  updateProgress();
+  updatePlayButton();
+  scheduleNext();
+})();
+</script>
+</body>
+</html>
