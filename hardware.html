@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hardware — Animated Learning Experience</title>
+<style>
+:root{
+  --bg:#07111f;--panel:#0c1b2c;--panel2:#10253a;--line:#29445d;
+  --ink:#f2f7fc;--muted:#a9bfd2;--accent:#58d6c5;--accent2:#79a9ff;
+  --warm:#ffc66d;--pink:#f48db2;--radius:22px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}
+body{background:
+ radial-gradient(ellipse at 18% 10%,rgba(49,118,164,.22),transparent 35%),
+ radial-gradient(ellipse at 85% 85%,rgba(27,137,125,.16),transparent 35%),var(--bg)}
+button{font:inherit}
+#app{position:relative;width:100%;height:100%;isolation:isolate}
+#topbar{position:absolute;z-index:10;top:0;left:0;right:0;height:72px;padding:0 clamp(18px,4vw,58px);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(130,174,207,.16);background:rgba(5,15,27,.52);backdrop-filter:blur(14px)}
+.brand{display:flex;align-items:center;gap:12px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#d9e9f5;font-weight:800}
+.brand-mark{width:30px;height:30px;border:1px solid var(--accent);border-radius:9px;display:grid;place-items:center;color:var(--accent);font-size:16px;box-shadow:0 0 22px #58d6c526}
+#chapter{font-size:12px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+#stage{position:absolute;inset:72px 0 68px;overflow:hidden}
+.scene{position:absolute;inset:0;display:grid;align-items:center;align-content:center;padding:clamp(24px,5vw,70px);overflow-y:auto;overscroll-behavior:contain;opacity:0;visibility:hidden}
+.scene.active{opacity:1;visibility:visible}
+.scene-inner{width:min(1180px,100%);margin:auto}
+.kicker{color:var(--accent);font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;margin-bottom:15px}
+h1,h2,p{margin-top:0}
+h1{font-size:clamp(44px,8vw,100px);line-height:.95;letter-spacing:-.055em;margin-bottom:22px;max-width:850px}
+h2{font-size:clamp(28px,4.2vw,54px);letter-spacing:-.04em;line-height:1.04;margin-bottom:16px}
+.lead{font-size:clamp(16px,1.8vw,21px);line-height:1.65;color:#bfd0df;max-width:710px}
+.muted{color:var(--muted);line-height:1.6}
+.accent{color:var(--accent)}
+.hero-layout{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,5vw,70px);align-items:center}
+.hero-orbit{min-height:360px;display:grid;place-items:center;position:relative}
+.chip{width:min(310px,66vw);aspect-ratio:1.15;border:1px solid #5a8ca6;border-radius:28px;background:linear-gradient(145deg,#15334a,#091725);box-shadow:0 0 0 10px #12283a88,0 0 70px #39c9b12a;position:relative;display:grid;place-items:center;transform:rotate(-5deg)}
+.chip:before,.chip:after{content:"";position:absolute;inset:-18px;border:1px dashed #3a728b;border-radius:34px;opacity:.8}
+.chip:after{inset:18px;border:1px solid #2c536c;border-radius:18px}
+.chip-core{z-index:1;text-align:center}
+.chip-core strong{display:block;font-size:clamp(25px,3vw,42px);letter-spacing:.08em}
+.chip-core span{display:block;font-size:11px;letter-spacing:.25em;color:var(--accent);margin-top:10px}
+.pin{position:absolute;width:30px;height:7px;background:#4f8197;border-radius:4px}
+.pin.p1{top:13%;left:-25px}.pin.p2{top:31%;left:-25px}.pin.p3{top:49%;left:-25px}.pin.p4{top:67%;left:-25px}.pin.p5{right:-25px;top:22%}.pin.p6{right:-25px;top:42%}.pin.p7{right:-25px;top:62%}.pin.p8{right:-25px;top:82%}
+.orbit-label{position:absolute;padding:9px 12px;border:1px solid #31546b;border-radius:10px;background:#0b1b2a;color:#c7d8e6;font-size:12px;white-space:nowrap}
+.ol1{top:5%;left:0}.ol2{right:0;top:12%}.ol3{bottom:8%;left:5%}.ol4{bottom:2%;right:2%}
+.pills{display:flex;flex-wrap:wrap;gap:9px;margin-top:26px}
+.pill{border:1px solid #315069;border-radius:999px;padding:9px 13px;color:#d2e1ed;background:#0c1b2b;font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:clamp(22px,4vw,52px);align-items:center}
+.visual-panel{position:relative;border:1px solid #25465e;border-radius:var(--radius);background:linear-gradient(145deg,#10263aee,#091725ee);padding:clamp(18px,3vw,32px);min-height:260px;overflow:hidden}
+.visual-panel:before{content:"";position:absolute;width:180px;height:180px;border:1px solid #2d5a70;border-radius:50%;right:-65px;top:-70px;box-shadow:0 0 0 18px #16324955,0 0 0 38px #16324933}
+.component-list{display:grid;gap:10px;position:relative}
+.component{display:flex;align-items:center;gap:13px;padding:12px 14px;border:1px solid #2b4a61;background:#0a1928;border-radius:13px;min-height:55px}
+.component .symbol{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:10px;background:#14364a;color:var(--accent);font-weight:900;font-size:17px}
+.component strong{display:block;font-size:14px}
+.component small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.icon-plate{width:100%;display:grid;place-items:center;min-height:190px}
+.diagram{width:min(100%,370px);height:auto;overflow:visible}
+.diagram text{font-family:inherit;fill:#dceaf5;font-size:12px}
+.diagram .board{fill:#102d3b;stroke:#59d6c4;stroke-width:2}
+.diagram .trace{fill:none;stroke:#4b8794;stroke-width:2;stroke-linecap:round}
+.diagram .block{fill:#183b4c;stroke:#73a6b8;stroke-width:1.4}
+.diagram .bright{fill:#123f48;stroke:#58d6c5;stroke-width:1.5}
+.card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px}
+.info-card{min-width:0;padding:20px;border:1px solid #284960;border-radius:17px;background:linear-gradient(145deg,#102438,#0b1928)}
+.info-card .symbol{font-size:22px;color:var(--accent);margin-bottom:15px}
+.info-card h3{font-size:16px;margin:0 0 8px}
+.info-card p{font-size:13px;line-height:1.55;color:var(--muted);margin:0}
+.storage-compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+.storage{border:1px solid #31516a;border-radius:17px;padding:19px;background:#0a1a29}
+.storage h3{margin:0 0 7px;font-size:17px}
+.storage p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.drive-icon{height:60px;width:90px;border:2px solid #5d91a5;border-radius:12px;margin-bottom:14px;position:relative;background:linear-gradient(145deg,#193d50,#0c2030)}
+.drive-icon:before{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:var(--accent);right:10px;bottom:9px}
+.drive-icon.ssd{border-color:var(--accent);border-radius:7px}
+.drive-icon.ssd:before{width:60px;height:25px;border-radius:4px;right:12px;top:15px;background:#16434a;border:1px solid #58d6c5}
+.flow-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px;position:relative}
+.flow-item{position:relative;border:1px solid #2a4a61;border-radius:15px;padding:18px 15px;background:#0c1d2c;min-height:130px}
+.flow-item .n{color:var(--accent);font-size:11px;font-weight:900;letter-spacing:.15em;margin-bottom:15px}
+.flow-item strong{font-size:14px;display:block;margin-bottom:7px}
+.flow-item span{font-size:12px;line-height:1.45;color:var(--muted);display:block}
+
+.end-card{border:1px solid #326077;border-radius:24px;padding:clamp(25px,5vw,55px);background:linear-gradient(135deg,#102d3b,#0a1a2a);position:relative;overflow:hidden}
+.end-card:after{content:"";position:absolute;width:280px;height:280px;border:1px solid #3d7180;border-radius:50%;right:-90px;bottom:-180px;box-shadow:0 0 0 24px #16374755,0 0 0 50px #16374733}
+.end-card h2,.end-card p,.end-card .pills{position:relative;z-index:1}
+#bottombar{position:absolute;z-index:10;bottom:0;left:0;right:0;height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,4vw,58px);border-top:1px solid rgba(130,174,207,.15);background:rgba(5,15,27,.58)}
+#scene-count{font-size:12px;color:var(--muted);letter-spacing:.1em}
+.controls{display:flex;gap:9px;align-items:center}
+.ctrl{border:1px solid #35546a;background:#0d2030;color:#eaf4fb;border-radius:11px;min-width:40px;height:38px;cursor:pointer;transition:background .2s,border .2s}
+.ctrl:hover{background:#17364a;border-color:var(--accent)}
+.ctrl.primary{padding:0 16px;border-color:#3d9f9a;color:var(--accent);font-weight:700}
+.ctrl:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+#pause-label{font-size:11px;color:var(--muted);min-width:48px}
+.ambient{position:absolute;pointer-events:none;border:1px solid #204158;border-radius:50%;opacity:.32}
+.ambient.a{width:230px;height:230px;top:17%;left:-155px}.ambient.b{width:330px;height:330px;right:-245px;bottom:8%}
+@media(max-width:760px){
+ #topbar{height:60px}#stage{inset:60px 0 62px}.scene{padding:18px 16px;align-content:start}.hero-layout,.two-col{grid-template-columns:1fr;gap:14px}
+ .hero-orbit{min-height:230px}.chip{width:190px}.orbit-label{font-size:10px;padding:7px 9px}.ol1{left:0}.ol2{right:0}
+ h1{font-size:clamp(44px,13vw,76px)}.lead{font-size:15px}.card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+ .info-card{display:grid;grid-template-columns:30px 1fr;column-gap:8px;padding:10px}.info-card .symbol{grid-row:span 2;margin:0}
+ .info-card h3{margin:1px 0 4px}.info-card p{font-size:11px;line-height:1.4}.photo-frame img{max-height:220px}.hero-photo img{height:190px}
+ .flow-row{grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.flow-item{min-height:90px;padding:10px}
+ .visual-panel{min-height:180px;padding:15px}
+ .component{min-height:44px;padding:8px 10px}.component .symbol{width:28px;height:28px;flex-basis:28px}
+ .component-list{grid-template-columns:1fr 1fr;gap:8px}.component strong{font-size:12px}.component small{font-size:10px}
+ .storage-compare{gap:9px;margin-top:15px}.storage{padding:13px}.storage h3{font-size:14px}.storage p{font-size:12px}
+ #bottombar{height:62px}#chapter{font-size:10px}.brand{font-size:10px}
+}
+@media(max-height:680px) and (min-width:761px){
+ .scene{padding-top:22px;padding-bottom:22px}.hero-orbit{min-height:260px}.chip{width:230px}
+ .flow-item{min-height:110px;padding:13px}.visual-panel{min-height:220px}.card-grid{margin-top:15px}.info-card{padding:14px}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+
+.photo-frame{position:relative;overflow:hidden;border:1px solid #31566b;border-radius:18px;background:#0a1b29;min-height:180px;box-shadow:0 14px 35px #0003}
+.photo-frame img{display:block;width:100%;height:240px;min-height:150px;max-height:330px;object-fit:cover;filter:saturate(.82) contrast(1.04);transition:transform .8s ease,filter .5s ease}
+.photo-frame:hover img{transform:scale(1.045);filter:saturate(1) contrast(1.06)}
+.photo-frame:after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(4,14,24,.78));pointer-events:none}
+.photo-caption{position:absolute;z-index:1;bottom:13px;left:15px;right:15px;font-size:12px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;color:#eff9ff}
+.hero-photo{width:min(100%,440px);justify-self:center}
+.hero-photo img{height:340px;object-fit:cover}
+.photo-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
+.photo-strip .photo-frame img{height:130px;min-height:130px}
+.photo-strip .photo-caption{font-size:10px;left:10px;bottom:9px}
+.photo-inline{display:block;width:100%;height:125px;object-fit:contain;background:#07111f;border-radius:11px;margin-bottom:12px;border:1px solid #31566b}
+.scene-photo{margin:16px 0 18px;max-width:920px}.scene-photo img{height:165px;min-height:140px;max-height:190px;object-fit:cover}.scene-photo.compact{max-width:760px}.scene-photo.compact img{height:140px;min-height:120px;max-height:155px}.recap-photo{margin:18px 0 8px;max-width:700px}.recap-photo img{height:175px;min-height:145px;max-height:190px}
+@media(max-width:760px){.hero-photo img{height:220px}.photo-strip{gap:8px}.photo-strip .photo-frame img{height:95px;min-height:95px}.photo-strip .photo-caption{font-size:9px}.photo-frame img{min-height:160px}}
+
+</style>
+</head>
+<body>
+<div id="app">
+<header id="topbar">
+  <div class="brand"><span class="brand-mark">H</span><span>Hardware / Core Systems</span></div>
+  <div id="chapter">01 — Foundations</div>
+</header>
+<div class="ambient a"></div><div class="ambient b"></div>
+<main id="stage" aria-live="polite">
+<section class="scene active" data-chapter="01 — Foundations" data-duration="15000">
+ <div class="scene-inner hero-layout">
+  <div class="hero-copy">
+   <div class="kicker">CompTIA A+ · Hardware</div>
+   <h1>Inside the<br><span class="accent">computer.</span></h1>
+   <p class="lead">Hardware is the physical part of a computer system — the components you can touch, connect, install, maintain and upgrade.</p>
+   <div class="pills"><span class="pill">Components</span><span class="pill">Compatibility</span><span class="pill">Installation</span><span class="pill">Troubleshooting</span></div>
+  </div>
+  <div class="hero-photo photo-frame">
+   <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Computer%20Motherboard%20Closeup.jpg" data-fallback="https://commons.wikimedia.org/wiki/Special:FilePath/Computer%202008%20inside.jpg" alt="Real computer motherboard with electronic components" loading="eager">
+   <div class="photo-caption">Computer hardware · physical components</div>
+  </div>
+ </div>
+</section>
+<section class="scene" data-chapter="02 — The motherboard" data-duration="15000">
+ <div class="scene-inner two-col">
+  <div><div class="kicker">01 / Main circuit board</div><h2>The <span class="accent">motherboard</span></h2><p class="lead">The motherboard is the main circuit board. It connects the computer’s components and provides the platform they use to communicate.</p>
+   <div class="pills"><span class="pill">CPU socket</span><span class="pill">RAM slots</span><span class="pill">Expansion slots</span><span class="pill">Connectors</span></div>
+  </div>
+  <div class="visual-panel icon-plate">
+   <div class="photo-frame" style="width:100%">
+    <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Computer-motherboard.jpg" data-fallback="https://commons.wikimedia.org/wiki/Special:FilePath/Computer%20Motherboard%20Closeup.jpg" alt="Photograph of a computer motherboard and its installed components" loading="lazy">
+    <div class="photo-caption">Motherboard · connected components</div>
+   </div>
+  </div>
+ </div>
+</section>
+<section class="scene" data-chapter="03 — Processing + memory" data-duration="15000">
+ <div class="scene-inner">
+  <div class="kicker">02 / Work and quick access</div><h2>CPU + <span class="accent">RAM</span></h2>
+  <p class="lead">The CPU executes instructions and performs calculations. RAM temporarily holds the data and instructions the CPU needs to access quickly.</p>
+  <div class="photo-frame scene-photo compact">
+   <img src="https://cdn.mos.cms.futurecdn.net/v2/t%3A0%2Cl%3A560%2Ccw%3A1440%2Cch%3A1440%2Cq%3A80%2Cw%3A1440/AMPaeKByFPSR8TVWZuvmiQ.jpg" data-fallback="https://www.pexels.com/photo/close-up-of-cpu-and-ram-sticks-on-white-background-37113175/" alt="Real desktop processor and RAM memory modules" loading="lazy">
+   <div class="photo-caption">CPU processor · RAM modules</div>
+  </div>
+  <div class="flow-row">
+   <div class="flow-item"><div class="n">01 / INPUT</div><strong>Data arrives</strong><span>Programs and data are made available to the system.</span></div>
+   <div class="flow-item"><div class="n">02 / RAM</div><strong>Quick access</strong><span>Active data is held temporarily for fast access.</span></div>
+   <div class="flow-item"><div class="n">03 / CPU</div><strong>Process</strong><span>Instructions are executed and calculations performed.</span></div>
+   <div class="flow-item"><div class="n">04 / OUTPUT</div><strong>Results</strong><span>Processed information can be presented to the user.</span></div>
+  </div>
+ </div>
+</section>
+<section class="scene" data-chapter="04 — Storage" data-duration="15000">
+ <div class="scene-inner two-col">
+  <div><div class="kicker">03 / Keep data</div><h2>Storage<br><span class="accent">devices</span></h2><p class="lead">Storage keeps data and applications. HDDs use mechanical parts; SSDs have no moving parts and offer faster performance.</p>
+   <div class="pills"><span class="pill">HDD</span><span class="pill">SSD</span><span class="pill">Optical media</span><span class="pill">Removable media</span></div>
+  </div>
+  <div class="visual-panel">
+   <div class="storage-compare">
+    <div class="storage"><img class="photo-inline" src="https://commons.wikimedia.org/wiki/Special:FilePath/Hard-drive.jpg" data-fallback="https://commons.wikimedia.org/wiki/Special:FilePath/Open%20hard-drive.jpg" alt="Hard disk drive photograph" loading="lazy"><h3>HDD</h3><p>Mechanical parts and moving components.</p></div>
+    <div class="storage"><img class="photo-inline" src="https://commons.wikimedia.org/wiki/Special:FilePath/Samsung%20SSD%20840%20EVO-front%20right%20PNr%C2%B00419.jpg" data-fallback="https://commons.wikimedia.org/wiki/Special:FilePath/Samsung%20SSD%20840%20EVO-front%20left%20PNr%C2%B00418.jpg" alt="2.5-inch Samsung SATA solid-state drive (SSD)" loading="lazy"><h3>SSD</h3><p>No moving parts; faster performance.</p></div>
+   </div>
+   <div class="component" style="margin-top:12px"><span class="symbol">▤</span><div><strong>Other storage media</strong><small>DVD / Blu-ray optical drives and removable media</small></div></div>
+  </div>
+ </div>
+</section>
+<section class="scene" data-chapter="05 — Input + output" data-duration="15000">
+ <div class="scene-inner">
+  <div class="kicker">04 / Human interaction</div><h2>Input goes in. <span class="accent">Output</span> comes out.</h2>
+  <div class="photo-frame scene-photo compact">
+   <img src="https://dvdolcson.cdn.shoprenter.hu/custom/dvdolcson/image/cache/w0h0q80np1/Blog/Dvdolcson%20-%20Blog%2015_11.jpg?v=null.1774632996" data-fallback="https://tnyellowpages.com/customer_gallery_image/2019-08-2618-10-03-PM.png" alt="Real keyboard, mouse, scanner and other computer peripherals" loading="lazy">
+   <div class="photo-caption">Input and output peripherals</div>
+  </div>
+  <div class="two-col" style="margin-top:12px">
+   <div class="visual-panel"><div class="kicker">INPUT DEVICES</div><div class="component-list">
+    <div class="component"><span class="symbol">⌨</span><div><strong>Keyboard</strong><small>Text and commands</small></div></div>
+    <div class="component"><span class="symbol">↖</span><div><strong>Mouse / touchpad</strong><small>Pointer control</small></div></div>
+    <div class="component"><span class="symbol">▧</span><div><strong>Scanner</strong><small>Capture documents</small></div></div>
+    <div class="component"><span class="symbol">◉</span><div><strong>Webcam</strong><small>Capture video</small></div></div>
+   </div></div>
+   <div class="visual-panel"><div class="kicker">OUTPUT DEVICES</div><div class="component-list">
+    <div class="component"><span class="symbol">▣</span><div><strong>Monitor</strong><small>Visual information</small></div></div>
+    <div class="component"><span class="symbol">▤</span><div><strong>Printer</strong><small>Printed output</small></div></div>
+    <div class="component"><span class="symbol">▱</span><div><strong>Projector</strong><small>Large-screen display</small></div></div>
+    <div class="component"><span class="symbol">♫</span><div><strong>Speakers</strong><small>Audio output</small></div></div>
+   </div></div>
+  </div>
+ </div>
+</section>
+<section class="scene" data-chapter="06 — Expansion + connectivity" data-duration="15000">
+ <div class="scene-inner two-col">
+  <div><div class="kicker">05 / Extend capabilities</div><h2>Expansion &amp;<br><span class="accent">connectivity</span></h2><p class="lead">Expansion cards add capabilities: graphics cards process visual data, sound cards handle audio, and network interface cards enable network connectivity.</p></div>
+  <div class="visual-panel">
+   <div class="photo-frame" style="margin-bottom:14px">
+    <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Graphic%20card.jpg" data-fallback="https://commons.wikimedia.org/wiki/Special:FilePath/DFP%20graphic%20card.jpg" alt="Computer graphics expansion card" loading="lazy">
+    <div class="photo-caption">Expansion hardware</div>
+   </div>
+   <div class="component-list">
+   <div class="component"><span class="symbol">▦</span><div><strong>Graphics card</strong><small>Visual processing for displays</small></div></div>
+   <div class="component"><span class="symbol">♫</span><div><strong>Sound card</strong><small>Audio processing</small></div></div>
+   <div class="component"><span class="symbol">⇄</span><div><strong>Network interface card</strong><small>Network connectivity</small></div></div>
+   <div class="component"><span class="symbol">↔</span><div><strong>Peripherals</strong><small>External drives, USB devices and KVM switches</small></div></div>
+  </div></div>
+ </div>
+</section>
+<section class="scene" data-chapter="07 — Power + cooling" data-duration="15000">
+ <div class="scene-inner">
+  <div class="kicker">06 / Reliable operation</div><h2>Power in. Heat out.</h2><p class="lead">The power supply converts AC power to DC power for system components. Cooling systems help prevent overheating.</p>
+  <div class="photo-frame" style="margin-top:22px">
+   <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Computer%202008%20inside.jpg" data-fallback="https://commons.wikimedia.org/wiki/Special:FilePath/Computer%20Motherboard%20Closeup.jpg" alt="Inside a desktop computer showing installed hardware and cooling components" loading="lazy">
+   <div class="photo-caption">Internal components · power and cooling</div>
+  </div>
+  <div class="card-grid">
+   <div class="info-card"><div class="symbol">ϟ</div><h3>Power supply</h3><p>Converts AC power into DC power used by internal components.</p></div>
+   <div class="info-card"><div class="symbol">✳</div><h3>Fans + heat sinks</h3><p>Move air and transfer heat away from components.</p></div>
+   <div class="info-card"><div class="symbol">◌</div><h3>Liquid cooling</h3><p>Uses circulating liquid to help carry heat away.</p></div>
+  </div>
+ </div>
+</section>
+<section class="scene" data-chapter="08 — Form factors" data-duration="15000">
+ <div class="scene-inner">
+  <div class="kicker">07 / Different shapes, different needs</div><h2>Hardware takes <span class="accent">many forms.</span></h2>
+  <p class="lead">Form factors range from traditional desktop towers to integrated and mobile systems, each with its own hardware configuration.</p>
+  <div class="photo-frame scene-photo compact">
+   <img src="https://www.marposs.com/media/5758/applications-227.jpg" data-fallback="https://www.technicaltalk.net/wp-content/uploads/2024/03/A-Guide-to-the-Major-Types-Of-Computers-1.jpg" alt="Real desktop all-in-one computer, laptop, tablet and smartphone" loading="lazy">
+   <div class="photo-caption">Desktop · laptop · tablet · smartphone</div>
+  </div>
+  <div class="card-grid">
+   <div class="info-card"><div class="symbol">▰</div><h3>Desktop tower</h3><p>Separate case and components, often designed for upgrades.</p></div>
+   <div class="info-card"><div class="symbol">▣</div><h3>All-in-one</h3><p>Computer components integrated with the display.</p></div>
+   <div class="info-card"><div class="symbol">▱</div><h3>Laptop</h3><p>Portable computer with integrated components.</p></div>
+   <div class="info-card"><div class="symbol">▯</div><h3>Tablet</h3><p>Compact, touch-oriented mobile computing.</p></div>
+   <div class="info-card"><div class="symbol">▮</div><h3>Smartphone</h3><p>Handheld device with highly integrated hardware.</p></div>
+   <div class="info-card"><div class="symbol">⚙</div><h3>Configuration</h3><p>Hardware layout varies with device form and purpose.</p></div>
+  </div>
+ </div>
+</section>
+<section class="scene" data-chapter="09 — Practical hardware skills" data-duration="15000">
+ <div class="scene-inner">
+  <div class="kicker">08 / From knowledge to practice</div><h2>Install. Verify. <span class="accent">Troubleshoot.</span></h2>
+  <p class="lead">Hardware support means understanding specifications and compatibility, following installation procedures, diagnosing faults and maintaining systems for performance and reliability.</p>
+  <div class="photo-frame scene-photo compact">
+   <img src="https://www.mcdmd.com/cm/dpl/images/content/332/comprepair.jpg" data-fallback="https://image.coolblue.be/max/800x800/content/8cfdf942c6d7e80fc4877f71196c67d0" alt="Technician installing RAM inside an open desktop computer" loading="lazy">
+   <div class="photo-caption">Hardware installation and maintenance</div>
+  </div>
+  <div class="flow-row">
+   <div class="flow-item"><div class="n">01 / CHECK</div><strong>Specifications</strong><span>Identify component requirements and compatibility.</span></div>
+   <div class="flow-item"><div class="n">02 / INSTALL</div><strong>Procedures</strong><span>Use correct installation and handling practices.</span></div>
+   <div class="flow-item"><div class="n">03 / DIAGNOSE</div><strong>Troubleshoot</strong><span>Isolate hardware problems methodically.</span></div>
+   <div class="flow-item"><div class="n">04 / MAINTAIN</div><strong>Reliability</strong><span>Maintain performance and system stability.</span></div>
+  </div>
+ </div>
+</section>
+<section class="scene" data-chapter="10 — Foundation complete" data-duration="15000">
+ <div class="scene-inner"><div class="end-card">
+  <div class="kicker">Hardware / Recap</div><h2>Understand the parts.<br><span class="accent">Understand the system.</span></h2>
+  <p class="lead">Hardware knowledge is the foundation for diagnosing, repairing and upgrading computer systems — and for building more advanced IT skills.</p>
+  <div class="photo-frame recap-photo">
+   <img src="https://capital.lv/media/magefan_blog/Datoru_komponentes.png" data-fallback="https://www.easypc.io/img/motherboard/form-factors.jpg" alt="Real computer hardware components including motherboard, processor, RAM, SSD and graphics card" loading="lazy">
+   <div class="photo-caption">Computer hardware · key components</div>
+  </div>
+  <div class="pills"><span class="pill">Motherboard</span><span class="pill">CPU + RAM</span><span class="pill">Storage</span><span class="pill">Input / output</span><span class="pill">Expansion</span><span class="pill">Power + cooling</span><span class="pill">Form factors</span></div>
+ </div></div>
+</section>
+</main>
+<footer id="bottombar">
+ <div id="scene-count">01 / 10</div>
+ <div class="controls">
+  <button class="ctrl" id="prev" aria-label="Previous scene">←</button>
+  <button class="ctrl primary" id="pause" aria-label="Pause automatic playback">Ⅱ <span id="pause-label">Pause</span></button>
+  <button class="ctrl" id="next" aria-label="Next scene">→</button>
+ </div>
+</footer>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(() => {
+ const scenes = [...document.querySelectorAll('.scene')];
+ const chapter = document.getElementById('chapter');
+ const count = document.getElementById('scene-count');
+ const pauseBtn = document.getElementById('pause');
+ const pauseLabel = document.getElementById('pause-label');
+ const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ let index = 0, paused = reduced, timer = null, startedAt = 0, remaining = 15000, timeline = null;
+ const hasGSAP = typeof window.gsap !== 'undefined';
+ const duration = i => 15000;
+ const $ = (s, root) => [...root.querySelectorAll(s)];
+ function stopTimer(){ if(timer){clearTimeout(timer);timer=null;} if(startedAt){remaining=Math.max(0,remaining-(performance.now()-startedAt));startedAt=0;} }
+ function schedule(ms){
+   if(paused)return;
+   clearTimeout(timer); remaining=ms; startedAt=performance.now();
+   timer=setTimeout(()=>go((index+1)%scenes.length),ms);
+ }
+ function animateScene(scene){
+   if(timeline){timeline.kill();timeline=null;}
+   const items=$( '.kicker, h1, h2, .lead, .pills, .hero-orbit, .visual-panel, .card-grid, .flow-item, .end-card, .component', scene);
+   if(hasGSAP){
+     gsap.set(items,{clearProps:'all'});
+     timeline=gsap.timeline();
+     timeline.fromTo(scene,{opacity:0},{opacity:1,duration:.55,ease:'power2.out'},0);
+     timeline.fromTo(items,{y:20,opacity:0},{y:0,opacity:1,duration:.58,stagger:.065,ease:'power3.out',clearProps:'transform'},.12);
+     const chip=scene.querySelector('.chip');
+     if(chip) timeline.fromTo(chip,{rotation:-10,scale:.92},{rotation:-5,scale:1,duration:1.1,ease:'elastic.out(1,.65)'},.1);
+   } else {
+     scene.style.opacity='1';
+     items.forEach((el,i)=>{el.style.opacity='0';el.style.transform='translateY(12px)';setTimeout(()=>{el.style.transition='opacity .45s ease, transform .45s ease';el.style.opacity='1';el.style.transform='none'},70+i*65)});
+   }
+ }
+ function go(next, userAction=false){
+   stopTimer();
+   index=(next+scenes.length)%scenes.length;
+   scenes.forEach((s,i)=>{s.classList.toggle('active',i===index);s.setAttribute('aria-hidden',i===index?'false':'true');if(i!==index&&hasGSAP)gsap.set(s,{opacity:0});});
+   chapter.textContent=scenes[index].dataset.chapter;
+   count.textContent=String(index+1).padStart(2,'0')+' / '+String(scenes.length).padStart(2,'0');
+   animateScene(scenes[index]);
+   remaining=duration(index);
+   if(!paused){
+     schedule(remaining);
+   }
+ }
+ function togglePause(){
+   if(paused){paused=false;pauseBtn.innerHTML='Ⅱ <span id="pause-label">Pause</span>';schedule(remaining||duration(index));}
+   else {paused=true;stopTimer();pauseBtn.innerHTML='▶ <span id="pause-label">Play</span>'; }
+ }
+ document.getElementById('prev').addEventListener('click',()=>go(index-1,true));
+ document.getElementById('next').addEventListener('click',()=>go(index+1,true));
+ pauseBtn.addEventListener('click',togglePause);
+ document.addEventListener('keydown',e=>{
+   if(e.key==='ArrowRight'){go(index+1,true);}
+   else if(e.key==='ArrowLeft'){go(index-1,true);}
+   else if(e.key===' '){e.preventDefault();togglePause();}
+ });
+ document.addEventListener('visibilitychange',()=>{
+   if(document.hidden&&!paused){stopTimer();}
+   else if(!document.hidden&&!paused){schedule(remaining||duration(index));}
+ });
+
+document.querySelectorAll('img').forEach(img => {
+  let triedFallback = false;
+  img.addEventListener('error', () => {
+    const fallbackUrl = img.dataset.fallback;
+    if (!triedFallback && fallbackUrl && img.src !== fallbackUrl) {
+      triedFallback = true;
+      img.src = fallbackUrl;
+      return;
+    }
+    img.style.display = 'none';
+    const frame = img.closest('.photo-frame') || img.parentElement;
+    if (frame && !frame.querySelector('.photo-fallback')) {
+      const fallback = document.createElement('div');
+      fallback.className = 'photo-fallback';
+      fallback.style.cssText = 'min-height:150px;display:grid;place-items:center;padding:20px;color:#a9bfd2;text-align:center;font-size:13px;background:#0b1b2a';
+      fallback.textContent = 'Photo could not load. Please check your internet connection.';
+      frame.appendChild(fallback);
+    }
+  });
+});
+
+ // Keep a true looping presentation: the last scene returns to the opening scene.
+ go(0);
+ if(reduced){pauseBtn.innerHTML='▶ <span id="pause-label">Play</span>';}
+})();
+</script>
+</body>
+</html>
